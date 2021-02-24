@@ -34,7 +34,7 @@ function route(recieverip, senderip, ... )
   end
 end
 
---//Список комманд роутера
+--//Список команд роутера
 commands={}
 
 --//Пинг
@@ -52,6 +52,10 @@ function commands.ver()
 end
 
 --//Выдача ip
+-- REV: Не очень хорошее название для функции - от геттера ожидают простого возвращения
+-- значения, а не запроса где-то, чего-то, у кого-то.
+-- Эта функция - хороший пример побочного эффекта, и этого стоит избегать.
+-- Лучше переименовать ее в, например, requestIP() или obtainIP().
 function commands.getip()
   if lan[acceptedAdr:sub(1,3)] then
     local adr=ip.."."..senderAdr:sub(1,3)
@@ -119,6 +123,7 @@ local t = thread.create(routing)
 while true do
   ev = {event.pull(_, "key_down")}
   local key=ev[4]
+  -- REV: Лучше вывести информацию о том, что программа закрывается нажатием на эту кнопку, самым первым сообщением от роутера
   if key==16 then --Q
     t:kill()
 	break
