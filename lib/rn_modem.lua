@@ -28,6 +28,7 @@ function card:receive(timeout)
   return table.unpack(ev,7)
 end
 
+-- REV: Плохое название для функции.
 function card:sendrec(recIP, ... )
   local ok,err=self:send(recIP, ... )
   if ok then
@@ -37,6 +38,11 @@ function card:sendrec(recIP, ... )
   end
 end
 
+-- REV: Функция необычно длинна - не критично, но лучше бы разбить ее на несколько.
+-- Например, отделить простую инициализацю полей (первые ~ 10 строк) от логики, например, получения IP
+--
+-- Также эта функция, как и многие другие у этих файлов, частично дублируется с другими rn_<> файлами, чего можно избежать, выделив
+-- общие части в отдельный метод(ы)
 function card:init(data)
   local obj={}
   setmetatable(obj,self)
@@ -47,6 +53,7 @@ function card:init(data)
   obj.proxy = component.proxy(obj.address)
   obj.shortaddr=obj.address:sub(1,3)
   obj.proxy.open(obj.port)
+  -- REV: Зачем представлять такие сложные конструкции одной строкой?
   event.listen("modem_message", function (...) local ev = {...} if ev[1] == "modem_message" and ev[2] == obj.address then event.push("racoonnet_message", table.unpack(ev,2))end end)
   if obj.master then
     obj.ip = obj.master
@@ -61,6 +68,7 @@ function card:init(data)
     ev, addr, rout, _, _, locip, routip, mess = event.pull(1,"modem_message") 
     if ev then
       if addr == obj.proxy.address and mess == "setip" then
+        -- REV: Зачем представлять такие сложные конструкции одной строкой?
   	    obj.ip=locip obj.router=rout obj.routerip = routip
         return obj
 	  end

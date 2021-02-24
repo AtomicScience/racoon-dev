@@ -1,3 +1,6 @@
+-- REV: Название файла откровенно плохое - оно не говорит, за что отвечает этот модуль
+-- А поскольку он отвечает за работу с файлами и логами, стоит это как-то подчеркнуть в названии.
+-- Но еще лучше - вынести в один файл функции работы с логом, назвать racoonLogger, а в другой - работу с конфигом, назвать racoonConfigManager, например
 local io = require("io")
 local filesystem = require("filesystem")
 local serialization = require("serialization")
@@ -9,11 +12,22 @@ local racoon = {}
 racoon.starttime = os.date("%x_%X"):gsub("[/:]", ".")
 racoon.logmode = "both"
 
+-- REV: "Магические числа" - один из самых распространенных антипаттернов
+-- В данном случае его можно избежать тремя способами:
+-- 1) Создать где-то константы:
+--     critical = 4
+--     error    = 3
+--     ...
+--    И использовать их вместо чисел - так код станет гораздо понятнее
+-- 2) Передавать аргумент значимости ошибки не числом, а строкой, как это сделано в переменной logMode
+-- 3) Разбить функцию log на несколько - logCritical, logError и так далее - этот вариант мне нравится больше
 function racoon.log(text, mtype, progname)
   if mtype == 4 then
-    racoon.lograw("["..os.date("%x %X").."] [CRITACAL]: "..text, progname)
+    racoon.lograw("["..os.date("%x %X").."] [CRITACAL]: "..text, progname) -- REV: Очепятка
   elseif mtype == 3 then
     racoon.lograw("["..os.date("%x %X").."] [ERROR]: "..text, progname)
+    -- REV: os.date() обычно возвращает бредовые и непредсказуемые значения типа 1970 года
+    -- Лучше в качестве временной метки использовать количество секунд, прошедшее с запуска программы
   elseif mtype == 2 then
     racoon.lograw("["..os.date("%x %X").."] [WARNING]: "..text, progname)
   elseif mtype == 0 then
@@ -23,6 +37,7 @@ function racoon.log(text, mtype, progname)
   end
 end
 
+-- REV: Лучше предусмотреть обработку случая progname == nil
 function racoon.logtofile(text, progname)
   if not filesystem.exists("/etc/log/") then filesystem.makeDirectory("/etc/log/") end
   logfile = io.open("/etc/log/"..progname.."_"..racoon.starttime..".log","a")
@@ -31,7 +46,7 @@ function racoon.logtofile(text, progname)
 end
 
 function racoon.logtoscreen(text)
-if text:find("CRITACAL") then
+if text:find("CRITACAL") then -- REV: Очепятка
   print(buf(buf.bg_red(buf.fg_black(text)), buf.bg_black(buf.fg_white(""))))
 elseif text:find("ERROR") then
   print(buf(buf.fg_red(text), buf.bg_black(buf.fg_white(""))))
